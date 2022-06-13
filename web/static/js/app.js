@@ -97,6 +97,12 @@ function opened() {
      livestream.currentTime = livestream.buffered.end((livestream.buffered.length - 1)) - 1;
     }
   };
+  ws.onclose = function(event) {
+    console.log("Disconnected")
+  };
+  ws.onerror = function(event) {
+    console.log(event);
+  }
 }
 
 
