@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"sort"
@@ -49,6 +50,24 @@ func serveHTTP() {
 }
 func ws(ws *websocket.Conn) {
 	defer ws.Close()
+	// Auth Proxy
+	jwt := ws.Request().FormValue("token")
+	req, err := http.NewRequest("GET", "http://localhost:5000/api/v1/login/verify", nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %v", jwt))
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	if resp.StatusCode != 200 {
+		log.Println("Could not verify login credentials")
+		return
+	}
 	suuid := ws.Request().FormValue("suuid")
 	log.Println("Request", suuid)
 	if !Config.ext(suuid) {
@@ -70,7 +89,7 @@ func ws(ws *websocket.Conn) {
 		}
 	}
 	muxer := mp4f.NewMuxer(nil)
-	err := muxer.WriteHeader(codecs)
+	err = muxer.WriteHeader(codecs)
 	if err != nil {
 		log.Println("muxer.WriteHeader", err)
 		return
